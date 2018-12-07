@@ -1,0 +1,549 @@
+package bjut.net.ap.ui.fragment;
+
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import org.xutils.common.Callback;
+import org.xutils.http.RequestParams;
+import org.xutils.x;
+
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import bjut.net.ap.ClassRoomActivity;
+import bjut.net.ap.R;
+import bjut.net.ap.adapter.RecyclerAdapter;
+import bjut.net.ap.config.GlobalConfig;
+import bjut.net.ap.config.URLConfig;
+import bjut.net.ap.model.Course;
+import bjut.net.ap.model.Tidings;
+import bjut.net.ap.model.Version;
+import bjut.net.ap.ui.base.BaseFragment;
+import bjut.net.ap.ui.view.MyDecoration;
+import bjut.net.ap.utils.AppUtils;
+import bjut.net.ap.utils.DateUtils;
+import bjut.net.ap.utils.NetUtils;
+import bjut.net.ap.utils.NetworkUtility;
+import bjut.net.ap.utils.ScreenUtils;
+import bjut.net.ap.utils.SharedPreferencesUtil;
+import bjut.net.ap.utils.TextUtils;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
+import static bjut.net.ap.utils.FastJsonTools.createJsonBean;
+import static bjut.net.ap.utils.FastJsonTools.createJsonToListBean;
+
+public class SignFragment extends BaseFragment {
+    @BindView(R.id.et_sno)
+    EditText et_sno;
+    @BindView(R.id.et_username)
+    EditText et_username;
+    // TODO: Rename parameter arguments, choose names that match
+    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM2 = "param2";
+    private static final String TAG = "zhangvalue";
+    public static String IP;             //本机IP
+    public static String MYIMEI;           //本机IMEI
+    public static String NAME="";          //连接WiFi名称
+    public static String macAddress;     //连接WiFi的MAC
+    String sno="";//用来标记最新的学号
+    String username="";//用来标记最新的用户名
+    private ScreenUtils utils;
+    private SharedPreferencesUtil spUtils;
+    SwipeRefreshLayout mRefreshLayout;
+    RecyclerView mRecyclerView;
+    private RecyclerAdapter mAdapter;
+    private List<Course> mCoursesList = new ArrayList<Course>();//用来接受服务器返回的courselist 集合
+    // TODO: Rename and change types of parameters
+    private String mParam1;
+    private String mParam2;
+
+    private OnFragmentInteractionListener mListener;
+
+    public SignFragment() {
+        // Required empty public constructor
+    }
+
+    // TODO: Rename and change types and number of parameters
+    public static SignFragment newInstance(String param1, String param2) {
+        SignFragment fragment = new SignFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM2, param2);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            mParam1 = getArguments().getString(ARG_PARAM1);
+            mParam2 = getArguments().getString(ARG_PARAM2);
+        }
+//        utils = new ScreenUtils(getContext());
+//        spUtils = new SharedPreferencesUtil(getContext());
+        Log.i("zhangvalue", "----------------到达了onCreate");
+    }
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_sign, container, false);
+        ButterKnife.bind(this, view);
+        utils = new ScreenUtils(getContext());
+        spUtils = new SharedPreferencesUtil(getContext());
+        initData();//如果键值对里面已经存储了用户名和学号就自动填充
+        Log.i("zhangvalue", "----------------到达了onCreateView");
+        switch (NetworkUtility.getNetworkType(getContext())) {
+            case NetworkUtility.CONNECT_TYPE_WIFI: {
+                Toast.makeText(getContext(), "当前处于wifi状态：可用",
+                        Toast.LENGTH_SHORT).show();
+                //当链接上bjut_wifi的时候开始获取mac信息
+                NAME=NetworkUtility.GetWifiName(getActivity());
+                Log.i("zhangvalue", "----------------GetWifiName----------------"+NAME);
+                if ("\"bjut_wifi\"".equals(NAME)){
+                    utils.showLoading();
+                    //获取mac的过程可能会阻塞，所以使用线程来获取
+                    new MacAsyncTask().execute();
+                    utils.cancleLoading();}
+                else{
+                    Log.i("zhangvalue", "-----------判断不出来wifi的名字 -------------");
+                    utils.createConfirmDialog("提示", "请链接上bjut_wifi 保证课程正常获取", "寡人知道了",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                }
+
+            }
+            break;
+            default:
+                //如果没有链接wifi的情况下就会去打开wifi
+                if (!NetworkUtility.WifiState(getActivity())){
+                    utils.createConfirmDialog("提示", "请授予开启wifi权限 并链接上bjut_wifi 保证课程正常获取", "授权开启",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    NetworkUtility.OpenWifi(getActivity());
+                                    dialog.dismiss();
+                                }
+                            });
+                }
+                else{
+                    utils.createConfirmDialog("提示", "请链接上bjut_wifi 保证课程正常获取", "好的",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                }
+//                utils.ToastInfo("当前处于非wifi状态：请链接bjut_wifi");
+        }
+        mRecyclerView = view.findViewById(R.id.id_recyclerview);
+        mRefreshLayout = view.findViewById(R.id.layout_swipe_refresh);
+        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
+            public void onRefresh() {
+                //在wifi打开的情况下才开始判断是否链接bjut_wifi,在进行后续操作
+                if (NetworkUtility.WifiState(getActivity())){
+                    //TODO 在刷新的时候先要重新获取mac
+                    //获取mac的过程可能会阻塞，所以使用线程来获取
+                    utils.showLoading();
+                    new MacAsyncTask().execute();
+                    utils.cancleLoading();
+                    //在重新加载之前先清除之前的数据，以免重叠数据
+                    mCoursesList.clear();
+                    if ("\"bjut_wifi\"".equals(NAME)){
+                        loadData();
+                        //数据重新加载完成后，提示数据发生改变，并且设置现在不在刷新
+                        //如果拿到了数据才会去提示发生改变
+                        //TODO 问题来了如何保证拿不到数据的时候让他不在继续一直刷新
+                        if (mCoursesList.size()>0){
+                            //只有当拿到了数据才开始改变适配器里面的数据
+                            mAdapter.notifyDataSetChanged();
+                            mRefreshLayout.setRefreshing(false);
+                        }else{
+                            //当没有数据事就停止继续刷新
+                            mRefreshLayout.setRefreshing(false);
+                        }
+                    }
+                    else{
+                        utils.cancleLoading();
+                        utils.createConfirmDialog("提示", "请链接bjut_wifi 保证课程正常获取", "好的",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                    }
+                }else{
+                    //开启wifi
+                    NetworkUtility.OpenWifi(getActivity());
+                }
+            }
+        });
+        ButterKnife.bind(getContext(), view);
+        initView();
+        if (NetworkUtility.WifiState(getActivity())&&NAME.equals("\"bjut_wifi\"")){
+            loadData();
+        }
+
+//        checkversion();
+        return view;
+    }
+    private void initData() {
+        if (!TextUtils.isEmpty(GlobalConfig.getUSERNO())) {
+            et_sno.setText(GlobalConfig.getUSERNO());
+        }
+        if (!TextUtils.isEmpty( GlobalConfig.getUSERNAME())) {
+            et_username.setText( GlobalConfig.getUSERNAME());
+        }
+    }
+
+    private void loadData() {
+        RequestParams params = new RequestParams(URLConfig.BASE_URL + URLConfig.GETCOURSE);
+        params.setCharset("UTF-8");
+        params.addBodyParameter("mac", GlobalConfig.getMAC());
+        final ProgressDialog pd = new ProgressDialog(getContext());
+        pd.setMessage(getResources().getString(R.string.Is_the_search));
+        pd.show();
+        x.http().post(params, new Callback.CommonCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                if (result != null) {
+                    Log.i("zhangvalue", "传输回来的result:" + result);
+                    Tidings tidings = createJsonBean(result, Tidings.class);//将json字符串转换为指定的bean对象
+
+                    if (GlobalConfig.SUCCESS_FLAG.equals(tidings.getStatus())) {
+                 /*       //此处弹出来的msg为用户刷新出该课程的开始与否
+                        ScreenUtils.showToast(tidings.getMsg());*/
+                        List<Course> newData = createJsonToListBean(tidings.getT().toString(), Course.class);
+                        mCoursesList.addAll(newData);
+                        //获取数据成功后，设置适配器
+                        if (mCoursesList != null) {
+                            //TODO 每次刷新获取到课程信息的时候将当前时间存成全局变量为后续判断课程是否过期做判断
+                            //将获取到的IMEI信息存放到静态变量之中
+                            String nowtime= DateUtils.getNowDateTime();
+                            GlobalConfig.UOLDTIME = nowtime;
+                            spUtils.writeData(GlobalConfig.OLDTIME ,nowtime);
+
+                            mAdapter = new RecyclerAdapter(getContext(), mCoursesList);
+                            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
+                            mRecyclerView.setLayoutManager(linearLayoutManager);
+                            mRecyclerView.setAdapter(mAdapter);
+                            //为RecyclerView添加HeaderView
+                            setHeaderView(mRecyclerView);
+                            //这句就是添加我们自定义的分隔线
+                            mRecyclerView.addItemDecoration(new MyDecoration(getContext(), MyDecoration.VERTICAL_LIST));
+                            mAdapter.setOnItemClickListener(new RecyclerAdapter.OnItemClickListener() {
+                                @Override
+                                public void onItemClick(View view, int position) {
+                                    Log.i("zhangvalue", "GlobalConfig.getUSERNAME():" + GlobalConfig.getUSERNAME());
+                                    //TODO 获取到当前cell的课程时间(8:00-11:30)并将其结束时间存起来 以“-”来分割
+                                    //获取数组中最后一个作为该节课的结束时间
+                                    String endtime =mCoursesList.get(position-1).getBegintime().split("-")[ 1];
+                                    String[] endtime1 = endtime.split(":");//下课时间的具体几点几分
+                                    int et1 = Integer.parseInt(endtime1[0]);
+                                    int et2 = Integer.parseInt(endtime1[1]);
+                                    String nowtime = DateUtils.getNowDateHM();//获取当前时间格式为8:30
+                                    String[] nowtime1=nowtime.split(":");
+                                    int now1= Integer.parseInt(nowtime1[0]);
+                                    int now2= Integer.parseInt(nowtime1[1]);
+                                    if (TextUtils.isEmpty(et_username.getText().toString())) {
+                                        utils.createConfirmDialog("提示",
+                                                "姓名不能为空",
+                                                "好的", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        dialog.dismiss();
+                                                    }
+                                                });
+//                                        utils.ToastInfo("姓名不能为空");
+                                    } else if (TextUtils.isEmpty(et_sno.getText().toString())) {
+                                        utils.createConfirmDialog("提示",
+                                                "学号不能为空",
+                                                "好的", new DialogInterface.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(DialogInterface dialog, int which) {
+                                                        dialog.dismiss();
+                                                    }
+                                                });
+//                                        utils.ToastInfo("学号不能为空");
+                                    }else try {
+                                        if (DateUtils.daysBetween(GlobalConfig.gerOLDTIME(),DateUtils.getNowDateTime())>12||(et1 < now1 || (et1 == now1 && et2 < now2)))
+                                        {
+                                            utils.createConfirmDialog("提示",
+                                                    "抱歉你点击的课程信息已经过期，请下拉刷新获取最新的课程信息",
+                                                    "好的", new DialogInterface.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(DialogInterface dialog, int which) {
+                                                            dialog.dismiss();
+                                                        }
+                                                    });
+                                        }else{
+                                            //因为有一个header所以在position的时候需要-1
+                                            Intent intent = new Intent(getContext(), ClassRoomActivity.class);
+                                            intent.putExtra("coursename", mCoursesList.get(position-1).getCoursename());
+                                            intent.putExtra("begintime", mCoursesList.get(position-1).getBegintime());
+                                            intent.putExtra("week", mCoursesList.get(position-1).getWeek());
+                                            intent.putExtra("beginweek", mCoursesList.get(position-1).getBeginweek());
+                                            intent.putExtra("endweek", mCoursesList.get(position-1).getEndweek());
+                                            intent.putExtra("location", mCoursesList.get(position-1).getLocation());
+                                            intent.putExtra("courseid", mCoursesList.get(position-1).getId());
+                                            intent.putExtra("teachername", mCoursesList.get(position-1).getTeachername());
+                                            sno=et_sno.getText().toString();
+                                            username=et_username.getText().toString();
+                                            GlobalConfig.USERNO = sno;
+                                            GlobalConfig.USERNAME = username;
+
+                                            //每次都存入最新的用户名，学号
+                                            spUtils.writeData(GlobalConfig.USNO,sno);
+                                            spUtils.writeData(GlobalConfig.UNAME,username);
+                                            startActivity(intent);
+                                        }
+                                    } catch (ParseException e) {
+                                        e.printStackTrace();
+                                    }
+
+
+                                }
+                            });
+                        } else {
+                            utils.createConfirmDialog("提示", "抱歉未找到相关教室信息\n1、请检查是否链接了bjut_wifi\n2、请你移动位置重新下拉刷新",
+                                    "好的", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                        }
+                    }else{
+                        //返回的状态码不是success就认为是返回错误信息，就是数据没有查询过数据库就默认没有链接bjut_wifi
+                        utils.createConfirmDialog("提示", "请你链接上bjut_wifi并且请登录",
+                                "好的", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                    }
+
+                }
+            }
+
+            @Override
+            public void onError(Throwable ex, boolean isOnCallback) {
+                Log.e("zhangvalue", ex.getMessage());
+                utils.createConfirmDialog("提示", "服务器又开小差了>_<\n1、请检查是否链接了bjut_wifi,并登录\n2、请你移动位置重新下拉刷新", "好的", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(CancelledException cex) {
+            }
+
+            @Override
+            public void onFinished() {
+                pd.dismiss();//取消加载
+            }
+        });
+    }
+
+
+
+    private void setHeaderView(RecyclerView view ) {
+        View header = LayoutInflater.from(getContext()).inflate(R.layout.header, view, false);
+        mAdapter.setHeaderView(header);
+    }
+
+    // TODO: Rename method, update argument and hook method into UI event
+    public void onButtonPressed(Uri uri) {
+        if (mListener != null) {
+            mListener.onFragmentInteraction(uri);
+        }
+    }
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+        }
+    }
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+//        binder.unbind();
+    }
+    public interface OnFragmentInteractionListener {
+        // TODO: Update argument type and name
+        void onFragmentInteraction(Uri uri);
+    }
+    //异步加载获取mac地址
+    class MacAsyncTask extends AsyncTask<String, String, String> {
+        protected String doInBackground(String... params) {
+            MYIMEI = NetworkUtility.getIMEI(getActivity());
+           /* //获取手机型号：
+            String   model= android.os.Build.MODEL;
+          //  获取手机厂商：
+            String carrier= android.os.Build.MANUFACTURER;*/
+            Log.e(TAG, "COME HERE------------imei" + MYIMEI);
+            WifiManager wifimanage = (WifiManager) getActivity().getApplicationContext().
+                    getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiinfo = wifimanage.getConnectionInfo();
+            int ipAddress = wifiinfo.getIpAddress();
+            macAddress = wifiinfo.getBSSID();//获取被连接网络的mac;
+            NAME = wifiinfo.getSSID(); //获取被连接网络wifi的名称;
+            if (ipAddress != 0) {
+                IP = ((ipAddress & 0xff) + "." + (ipAddress >> 8 & 0xff) + "."
+                        + (ipAddress >> 16 & 0xff) + "." + (ipAddress >> 24 & 0xff));
+                Log.e(TAG, "COME HERE------------IP" + IP);
+                Log.e(TAG, "COME HERE------------macAddress" + macAddress);
+                Log.e(TAG, "COME HERE------------NAME" + NAME);
+            }
+            return MYIMEI;
+        }
+        @Override
+        protected void onPostExecute(String unused) {
+            // 取消加载提示
+            utils.cancleLoading();
+            //将获取到的IMEI信息存放到静态变量之中
+            GlobalConfig.UIMEI = MYIMEI;
+            GlobalConfig.WIFINAME = NAME;
+            GlobalConfig.MACNAME = macAddress;
+            //用户再次登录时，查看之前是否已经登录过一次了，但，可能存在过个用户在同一台手机上登录多次的情况，则只默认记住最后一次登录人的用户id
+            spUtils.writeData(GlobalConfig.IMEI, MYIMEI);
+            spUtils.writeData(GlobalConfig.MAC, macAddress);
+            spUtils.writeData(GlobalConfig.WIFI, NAME);
+        }
+    }
+    /**
+     * 检查版本更新信息
+     */
+    private void checkversion() {
+        RequestParams params = new RequestParams(URLConfig.BASE_URL + URLConfig.CHECKVERSION);
+        params.setCharset("UTF-8");
+        params.addBodyParameter("versioncode", String.valueOf(AppUtils.getAppVersionCode(getContext())));
+        final ProgressDialog pd = new ProgressDialog(getContext());
+        pd.setMessage(getResources().getString(R.string.Is_the_search));
+        pd.show();
+        x.http().post(params, new Callback.CommonCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                if (result != null) {
+                    Log.i("zhangvalue", "传输回来的result:" + result);
+                    Tidings tidings = createJsonBean(result, Tidings.class);
+//                    ScreenUtils.showToast(tidings.getMsg());//测试的时候可以展示，最后就将注释掉
+                    //返回的状态为success
+                    if (GlobalConfig.SUCCESS_FLAG.equals(tidings.getStatus())) {
+                        Version newData = createJsonBean(tidings.getT().toString(), Version.class);
+                        //获取数据成功后，判断是否为null
+                        if (newData != null) {
+                            new AlertDialog.Builder(getContext())
+                                    .setTitle("发现新版本")
+                                    .setMessage(tidings.getMsg())
+                                    .setPositiveButton("立即更新", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            if (NetUtils.isWifi(getContext())) {
+                                                //wifi下载
+                                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                                intent.setData(Uri.parse(URLConfig.DOAWNLOAD_URL));
+                                                getContext().startActivity(intent);
+                                                dialog.dismiss();
+                                            } else {
+                                                utils.createConfirmDialog(
+                                                        0,
+                                                        "提示：", "当前处于非wifi状态下是否继续下载？",
+                                                        "确定继续下载", "下次再说吧"
+                                                        , new DialogInterface.OnClickListener() {
+
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                //下载
+                                                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                                                intent.setData(Uri.parse(URLConfig.DOAWNLOAD_URL));
+                                                                getContext().startActivity(intent);
+                                                                dialog.dismiss();
+                                                            }
+                                                        }, new DialogInterface.OnClickListener() {
+
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                dialog.dismiss();
+                                                            }
+                                                        });
+                                            }
+                                        }
+                                    })
+                                    .setNegativeButton("以后再说", null)
+                                    .show();
+
+
+                        } else {
+                            utils.createConfirmDialog("提示", "目前已经是最新版本\n",
+                                    "知道了", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    });
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onError(Throwable ex, boolean isOnCallback) {
+                Log.e("zhangvalue", ex.getMessage());
+                utils.createConfirmDialog("提示", "服务器又开小差了>_<\n请检查网络链接", "知道了",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+            }
+
+            @Override
+            public void onCancelled(CancelledException cex) {
+            }
+
+            @Override
+            public void onFinished() {
+                pd.dismiss();//取消加载
+            }
+        });
+    }
+}

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#019EC7</color>
+    <color name="colorPrimaryDark">#019EC7</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorLight">#ffffff</color>
+    <color name="colorDark">#000000</color>
+    <color name="colorAccentAlpha">#801572fc</color>
+    <color name="huise">#cccccc</color>
+    <!--背景色-->
+    <color name="windowsBackground">#f7f7f7</color>
+    <color name="windowsBackgroundLight">#f8f8f8</color>
+
+    <!--字体颜色-->
+    <color name="textPrimary">#4e5864</color>
+    <color name="textSecond">#8d9ca9</color>
+    <color name="textAccent">@color/colorDark</color>
+    <color name="textLight">@color/colorLight</color>
+    <color name="textDark">#202020</color>
+
+    <!--提示色彩-->
+    <color name="alertNormal">#4ce275</color>
+    <color name="alertImportant">#f98d2c</color>
+
+    <!--遮罩颜色-->
+    <color name="maskChatHeader">#30000000</color>
+    <!--导航栏Icon遮罩色-->
+    <color name="navIconTintLight">#f0ffffff</color>
+
+
+    <color name="tab_main_text_1">#aaa</color>
+    <color name="white">#ffffffff</color>
+    <color name="gray_text">#ffa8b2bd</color>
+    <color name="btn_login_normal">#ff00acff</color>
+
+    <color name="hint">#DCDCDC</color>
+    <!-- 主体文字,标题/标签 -->
+    <color name="txt_black">#212121</color>
+
+    <!-- 内容文字,正文 -->
+    <color name="txt_gray">#808080</color>
+    <!-- 辅助文字,提示 -->
+    <color name="txt_light_gray">#CCCCCC</color>
+</resources>

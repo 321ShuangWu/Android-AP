@@ -1,0 +1,61 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.jakewharton.butterknife'//添加这行
+android {
+    compileSdkVersion 26
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+    }
+    /*versionCode是给设备程序识别版本(升级)用的，必须是一个interger值，整数，代表app更新过多少次
+    versionName是给用户看的，可以写1.1 , 1.2等等版本*/
+    defaultConfig {
+        applicationId "bjut.net.ap"
+        multiDexEnabled true
+        minSdkVersion 23
+        targetSdkVersion 26
+        versionCode 5
+        versionName "1.0.5"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    signingConfigs {
+        debug {
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+        release {
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+    productFlavors {
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:26.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    testImplementation 'junit:junit:4.12'
+    compile 'com.google.code.gson:gson:2.3.1'
+    compile 'com.jakewharton:butterknife:8.5.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
+    compile 'com.android.support:recyclerview-v7:26.0.0'
+    compile 'org.xutils:xutils:3.4.0'
+    compile 'com.alibaba:fastjson:1.2.29'
+    compile 'me.weyye.hipermission:library:1.0.7'
+}

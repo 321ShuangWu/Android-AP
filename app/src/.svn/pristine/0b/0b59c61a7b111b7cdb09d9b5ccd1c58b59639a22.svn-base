@@ -1,0 +1,117 @@
+package bjut.net.ap.ui.activity;
+
+import android.annotation.TargetApi;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+
+import org.xutils.common.Callback;
+import org.xutils.http.RequestParams;
+import org.xutils.x;
+
+import bjut.net.ap.R;
+import bjut.net.ap.ui.base.BaseActivity;
+import bjut.net.ap.config.GlobalConfig;
+import bjut.net.ap.config.URLConfig;
+import bjut.net.ap.model.Ap;
+import bjut.net.ap.model.Tidings;
+import bjut.net.ap.utils.FastJsonTools;
+import bjut.net.ap.utils.ScreenUtils;
+import bjut.net.ap.utils.SharedPreferencesUtil;
+import bjut.net.ap.utils.TextUtils;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
+import static bjut.net.ap.ui.fragment.SignFragment.macAddress;
+
+
+public class SubmitApActivity extends BaseActivity {
+    @BindView(R.id.et_location)
+    EditText et_location;
+    @BindView(R.id.bt_mac)
+    Button bt_mac;
+    ScreenUtils utils;
+    SharedPreferencesUtil spUtil;
+    public static String location;     //表示位置信息
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_submit_ap);
+        ButterKnife.bind(this);
+        initTitle("发现新AP");
+        utils = new ScreenUtils(this);
+        spUtil = new SharedPreferencesUtil(this);
+    }
+
+    /**
+     * mac地址上传到服务器端
+     * 如果mac，如果mac和location同时存在与数据库
+     * 就说明该mac地址所对应已经存在于数据库中就不添加
+     *
+     * @param view
+     */
+    @OnClick(R.id.bt_mac)
+    public void uploadMac(View view) {
+        location = et_location.getText().toString().trim();
+        if (TextUtils.isEmpty(macAddress)) {
+            utils.ToastInfo("macAddress不能为空");
+        } else if (TextUtils.isEmpty(location)) {
+            utils.ToastInfo("位置信息不能为空");
+        } else {
+            final ProgressDialog pd = new ProgressDialog(this);
+            pd.setMessage(getResources().getString(R.string.Is_the_upload));
+            pd.show();
+            RequestParams params = new RequestParams(URLConfig.BASE_URL + URLConfig.UPLOADMAC);
+            Ap apInfo = new Ap(macAddress, location);
+            // 2.用FastJsonTools转化为json数据格式
+            String json = FastJsonTools.createJsonString(apInfo);
+            params.addBodyParameter("json", json);
+            params.setAsJsonContent(true);
+            params.setBodyContent(json);
+            x.http().post(params, new Callback.CommonCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.i("zhangvalue", result);
+                    Tidings tidings = FastJsonTools.createJsonBean(result, Tidings.class);
+                    if (GlobalConfig.SUCCESS_FLAG.equals(tidings.getStatus())) {//包含上传成功的符号，表示上传成功
+                        ScreenUtils.showToast(tidings.getMsg());//给出上传成功提示
+                        utils.createConfirmDialog("提示", tidings.getMsg(), "朕知道了", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                    } else {
+                        utils.createConfirmDialog("提示", tidings.getMsg(), "寡人知道了", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onError(Throwable ex, boolean isOnCallback) {
+                    ScreenUtils.showToast("网络错误" + ex.getMessage());
+                }
+
+                @Override
+                public void onCancelled(CancelledException cex) {
+                }
+
+                @Override
+                public void onFinished() {
+                    pd.dismiss();//取消加载
+                }
+            });
+        }
+    }
+}

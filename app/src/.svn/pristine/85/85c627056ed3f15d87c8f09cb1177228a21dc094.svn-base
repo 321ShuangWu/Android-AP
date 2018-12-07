@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">Ap</string>
+    <string name="user_name">用户名</string>
+    <string name="register">立即注册</string>
+    <string name="Is_the_registered">注册中…</string>
+    <string name="Is_the_cancel">签到记录撤销中…</string>
+    <string name="Is_the_upload">上传中…</string>
+    <string name="Is_the_sign_on">签到中…</string>
+    <string name="Is_the_search">数据查询中…</string>
+
+
+    <string name="sign">签到主页</string>
+    <string name="personal">个人主页</string>
+    <string name="load_more_before">加载更多</string>
+    <string name="load_more">正在加载&#8230;</string>
+    <string name="load_more_complete">已经到达底部了</string>
+
+
+
+    <string name="aboutme">
+           作为基于Ap信息的签到应用，目前移动端主要功能如下\n
+        \n
+        1、在特定的Ap收录信息的教室中可以展示出特定的教室，并且可以签到\n
+        \n
+        2、在进行签到的时候做了基本逻辑判断包括签到签到成功、撤回签到、重复签到处理\n
+        \n
+        3、添加了该学生的本门课程签到历史和该学生的所有签到历史记录\n
+        \n
+        4、对于非法签到请求后台进行的逻辑处理,非法请求次数过多将进行处理\n
+        \n
+        5、添加了服务与支持功能,有任何应用问题和建议都可以在服务与支持中反馈提出\n
+        \n
+    </string>
+    <string name="about">关于AP</string>
+    <string name="advice">服务与支持</string>
+    <string name="history">我的签到历史</string>
+    <string name="singlehistory">本次课程的签到历史</string>
+    <string name="refresh">检查更新</string>
+
+
+    <string name="a">搜不到上课信息</string>
+    <string name="b">界面不友好</string>
+    <string name="c">功能模块待优化</string>
+    <string name="d">运行速度太慢</string>
+    <string name="f">反馈类型:</string>
+    <string name="dialog_positive">确定</string>
+    <string name="dialog_negative">取消</string>
+    <string name="update_info">
+        最新版本：%1$s
+        \n\n更新内容：\n%2$s
+    </string>
+</resources>

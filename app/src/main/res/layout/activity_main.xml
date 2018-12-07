@@ -1,0 +1,142 @@
+<!-- A DrawerLayout is intended to be used as the top-level content view using match_parent for both width and height to consume the full space available. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/huise"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:id="@+id/rl_action_bar"
+        android:layout_width="fill_parent"
+        android:layout_height="44dip"
+        android:background="@color/colorPrimary"
+        android:gravity="center_vertical"
+        android:padding="0.0px">
+
+
+        <TextView
+            android:id="@+id/ivTitleName"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:paddingLeft="96.0dip"
+            android:paddingRight="96.0dip"
+            android:singleLine="true"
+            android:text="@string/app_name"
+            android:textColor="@color/colorDark"
+            android:textSize="24dp" />
+
+      <!--  <ImageButton
+            android:id="@+id/ib_person"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dip"
+            android:background="@color/colorPrimaryDark"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:src="@mipmap/icon_3_b"/>-->
+
+        <ImageButton
+            android:id="@+id/ivTitleBtnLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dip"
+            android:background="@color/tab_main_text_1"
+            android:gravity="center"
+            android:includeFontPadding="false" />
+
+
+
+
+        <ImageView
+            android:id="@+id/iv_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="5dip"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:src="@android:drawable/ic_input_add" />
+
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="9"
+        android:orientation="vertical">
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/white"
+        android:orientation="horizontal">
+
+        <RadioGroup
+            android:id="@+id/rg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp">
+
+            <RadioButton
+                android:id="@+id/rb1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#00000000"
+                android:button="@null"
+                android:drawableTop="@drawable/sign_selector"
+                android:gravity="center|bottom"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:text="@string/sign"
+                android:textColor="@drawable/textcolor"
+                android:textSize="14sp" />
+            <RadioButton
+                android:id="@+id/rb2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#ffffff"
+                android:button="@null"
+                android:drawableTop="@drawable/meeting_selector"
+                android:gravity="center|bottom"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:text="@string/meeting"
+                android:textColor="@drawable/textcolor"
+                android:textSize="14sp" />
+            <RadioButton
+                android:id="@+id/rb"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="#ffffff"
+                android:button="@null"
+                android:drawableTop="@drawable/personal_selector"
+                android:gravity="center|bottom"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:text="@string/personal"
+                android:textColor="@drawable/textcolor"
+                android:textSize="14sp" />
+
+        </RadioGroup>
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,124 @@
+package bjut.net.ap.ui.activity;
+
+import android.annotation.SuppressLint;
+import android.content.DialogInterface;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.view.KeyEvent;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+
+import bjut.net.ap.R;
+import bjut.net.ap.ui.base.BaseActivity;
+import bjut.net.ap.ui.fragment.PersonalFragment;
+import bjut.net.ap.ui.fragment.SignFragment;
+import bjut.net.ap.ui.view.AddPopWindow;
+import bjut.net.ap.utils.Exit;
+import bjut.net.ap.utils.ScreenUtils;
+import bjut.net.ap.utils.SharedPreferencesUtil;
+
+
+public class MainActivity extends BaseActivity implements
+        RadioGroup.OnCheckedChangeListener {
+    private ImageView iv_add;
+    private CharSequence mTitle;
+    private RadioGroup rg;
+    public static RadioButton rb1, rb2;
+    private TextView tv_title;
+    private final String titles[] = {"签到主页", "个人主页"};
+    ScreenUtils utils;
+    SharedPreferencesUtil spUtil;
+
+    @SuppressLint("NewApi")
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        utils = new ScreenUtils(this);
+        spUtil = new SharedPreferencesUtil(this);
+        tv_title = findViewById(R.id.ivTitleName);
+        initContentMenu();
+        setUpMenu();
+    }
+
+    private void initContentMenu() {
+        iv_add =  findViewById(R.id.iv_add);
+        // 点击右边显示
+        iv_add.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                AddPopWindow addPopWindow = new AddPopWindow(MainActivity.this);
+                addPopWindow.showPopupWindow(iv_add);
+            }
+
+        });
+    }
+
+
+    private void setUpMenu() {
+
+        rg =  findViewById(R.id.rg);
+        rb1 =  findViewById(R.id.rb1);
+        rb2 =  findViewById(R.id.rb2);
+
+        rg.setOnCheckedChangeListener(this);
+        rb1.setChecked(true);
+        setTitle(titles[0]);
+
+    }
+
+
+
+    public void changeFragment(Fragment targetFragment) {
+        // resideMenu.clearIgnoredViewList();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, targetFragment, "fragment")
+                .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                .commit();
+    }
+
+
+    // 监听手机上的BACK键
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            // 判断菜单是否关闭
+            utils.createConfirmDialog(0, "您确定要退出吗", null, "退出", "取消",
+                    new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Exit.getInstance1();
+
+                        }
+                    }, new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+
+                        }
+                    });
+
+            return true;
+
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void onCheckedChanged(RadioGroup group, int checkedId) {
+        if  (rb1.getId() == checkedId) {
+            tv_title.setText(titles[0]);
+            changeFragment(new SignFragment());
+
+        }else if (rb2.getId() == checkedId) {
+            changeFragment(new PersonalFragment());
+            tv_title.setText(titles[1]);
+        }
+    }
+}

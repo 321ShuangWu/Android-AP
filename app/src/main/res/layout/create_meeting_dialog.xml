@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/create_meeting_dialog_view"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/contact_edit_edittext_focused"
+    android:minWidth="200dp"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:paddingBottom="30dp"
+    android:paddingTop="30dp">
+
+    <TextView
+        android:id="@+id/text_meetingname"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/contact_edit_edittext_focused"
+        android:layout_marginBottom="8dp"
+        android:minHeight="45dp"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/text_organizer"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/contact_edit_edittext_focused"
+        android:layout_marginBottom="8dp"
+        android:minHeight="45dp"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/text_meeting_begin_time"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/contact_edit_edittext_focused"
+        android:layout_marginBottom="8dp"
+        android:minHeight="45dp"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/text_meeting_end_time"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/contact_edit_edittext_focused"
+        android:layout_marginBottom="8dp"
+        android:minHeight="45dp"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/text_meetinglocation"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/contact_edit_edittext_focused"
+        android:layout_marginBottom="8dp"
+        android:minHeight="45dp"
+        android:textSize="18sp"  />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_meetingsign"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/contact_edit_edittext_focused"
+            android:textSize="@dimen/activity_margin_20"
+            android:text="签到" />
+        <Button
+            android:id="@+id/btn_sign_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/contact_edit_edittext_focused"
+            android:textSize="@dimen/activity_margin_20"
+            android:text="撤销" />
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/contact_edit_edittext_focused"
+            android:textSize="@dimen/activity_margin_20"
+            android:text="返回" />
+    </LinearLayout>
+
+</LinearLayout>

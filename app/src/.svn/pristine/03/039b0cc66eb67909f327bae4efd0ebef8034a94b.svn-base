@@ -1,0 +1,134 @@
+package bjut.net.ap.ui.base;
+
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.view.View;
+
+import org.xutils.common.util.LogUtil;
+
+import java.io.UnsupportedEncodingException;
+
+/**
+ * Created by 郑明亮 on 2017/4/5 20:50.
+ */
+
+public class BaseFragment extends Fragment {
+
+    protected int articleTypeId;
+    /**
+     * 标记已加载完成，保证懒加载只能加载一次
+     */
+    private boolean hasLoaded = false;
+    /**
+     * 标记Fragment是否已经onCreate
+     */
+    protected  boolean isCreated = false;
+    /**
+     * 界面对于用户是否可见
+     */
+    private boolean isVisibleToUser = false;
+    private View view;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if(savedInstanceState != null){
+            isCreated = savedInstanceState.getBoolean("isCreated");
+            hasLoaded = savedInstanceState.getBoolean("hasLoaded");
+            isVisibleToUser = savedInstanceState.getBoolean("isVisibleToUser");
+        }
+
+    }
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (getUserVisibleHint()){
+            LogUtil.d(articleTypeId+"视图可见");
+            this.isVisibleToUser = true;
+            onVisible();
+        }else{
+            LogUtil.d(articleTypeId+"视图不可见");
+            this.isVisibleToUser = false;
+            onInVisible();
+        }
+
+    }
+
+    /**视图是否已创建
+     * @param
+     */
+    protected synchronized void initView(){
+        this.isCreated = true;
+        setUserVisibleHint(true);
+
+    }
+
+    /**
+     * Fragment可见时，相关操作
+     */
+    private void onVisible() {
+
+        //如果该界面不对用户显示、已经加载、fragment还没有创建，
+        //三种情况任意一种，不获取数据
+        LogUtil.d(articleTypeId+"isCreated:" + isCreated);
+        LogUtil.d(articleTypeId+"isVisibleToUser:" + isVisibleToUser);
+        LogUtil.d(articleTypeId+"hasLoaded:" + hasLoaded);
+        if (!isVisibleToUser || !isCreated || hasLoaded){
+            return ;
+        }
+        try {
+            lazyLoad();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+    /**
+     * Fragment不可见时，相关操作
+     */
+    protected  void onInVisible(){
+
+    }
+
+    /**
+     * 懒加载，子类继承该方法，以及下面的initView方法，即可使用Fragment懒加载功能
+     * @link top.wys.developerclub.ui.base.BaseFragment#initView(boolean)方法
+     */
+    protected  void lazyLoad() throws UnsupportedEncodingException {
+        if (!isVisibleToUser || !isCreated || hasLoaded){
+            return ;
+        }
+        hasLoaded = true;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        LogUtil.d("onDetach");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        LogUtil.d("onDestroy");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        isCreated = false;
+        hasLoaded = false;
+        isVisibleToUser = false;
+        LogUtil.d(articleTypeId+"onDestroyView");
+    }
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(articleTypeId+"isCreated",isCreated);
+        outState.putBoolean(articleTypeId+"hasLoaded",hasLoaded);
+        outState.putBoolean(articleTypeId+"isVisibleToUser",isVisibleToUser);
+        super.onSaveInstanceState(outState);
+    }
+}
